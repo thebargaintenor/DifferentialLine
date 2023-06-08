@@ -33,8 +33,8 @@ module Core =
 
     type DifferentialLine =
         { nodes: Node array
-          maxForce: float
-          maxSpeed: float
+          fmax: float
+          vmax: float
           desiredSeparation: float
           cohesionRatio: float
           maxEdgeLength: float }
@@ -70,9 +70,9 @@ module Core =
 
                 if forces.[i].L2Norm() > 0 then
                     forces.[i] <- 
-                        VecMath.scaleToMagnitude dl.maxSpeed forces.[i]
+                        VecMath.scaleToMagnitude dl.vmax forces.[i]
                         |> VecMath.subtract dl.nodes.[i].velocity
-                        |> VecMath.limit dl.maxForce
+                        |> VecMath.limit dl.fmax
         forces
 
     let attract (node: Node) (target: Vector<float>): Vector<float> =
@@ -88,7 +88,7 @@ module Core =
         
         [| 0 .. nmax |]
         |> Array.map (fun i ->
-            match i with
+            match i with // handles circular array
             | 0 -> dl.nodes.[nmax].position.Add(dl.nodes.[1].position)
             | n when n = nmax -> dl.nodes.[n-1].position.Add(dl.nodes.[0].position)
             | _ -> dl.nodes.[i-1].position.Add(dl.nodes.[i+1].position)
@@ -107,3 +107,5 @@ module Core =
         separationForces dl
         |> Array.map (VecMath.multiplyScalar dl.cohesionRatio)
         |> Array.map2 VecMath.add (cohesionForces dl)
+
+    let grow (dl: DifferentialLine): Node array = [||]
